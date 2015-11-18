@@ -91,6 +91,8 @@ Puppet::Type.type(:openldap_access).provide(:olc) do
       slapcat(
         '-b',
         'cn=config',
+        '-o',
+        'ldif-wrap=no',
         '-H',
         "ldap:///???(olcSuffix=#{suffix})"
       ).split("\n").collect do |line|
@@ -172,22 +174,6 @@ Puppet::Type.type(:openldap_access).provide(:olc) do
     @property_flush[:islast] = value
   end
 
-  def self.getCountOfOlcAccess(suffix)
-    countOfElement = 0
-    slapcat(
-      '-H',
-      "ldap:///#{getDn(suffix)}???(olcAccess=*)"
-    ).split("\n\n").collect do |paragraph|
-      paragraph.gsub("\n ", '').split("\n").collect do |line|
-        case line
-        when /^olcAccess: /
-          countOfElement = countOfElement + 1
-        end
-      end
-    end
-    return countOfElement
-  end
-
   def getCurrentOlcAccess(suffix)
     i = []
     slapcat(
@@ -230,14 +216,6 @@ Puppet::Type.type(:openldap_access).provide(:olc) do
           t << "olcAccess: {#{olcAccess[:position]}}#{olcAccess[:content]}\n"
         end
       end
-      countOfElement = self.class.getCountOfOlcAccess(resource[:suffix])
-      if resource[:islast] and countOfElement > position.to_i+1
-        t << "-\n"
-        t << "delete: olcAccess\n"
-        (position.to_i+1..countOfElement-1).each do |n|
-          t << "olcAccess: {#{n}}\n"
-        end
-      end
       t.close
       Puppet.debug(IO.read t.path)
       begin
@@ -248,6 +226,4 @@ Puppet::Type.type(:openldap_access).provide(:olc) do
     end
     @property_hash = resource.to_hash
   end
-
-
 end
