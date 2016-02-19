@@ -1,6 +1,7 @@
 # See README.md for details.
 class openldap::server(
   $package           = $openldap::params::server_package,
+  $ensure            = $openldap::params::server_ensure,
   $confdir           = $openldap::params::server_confdir,
   $conffile          = $openldap::params::server_conffile,
   $service           = $openldap::params::server_service,
