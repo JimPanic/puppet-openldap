@@ -14,10 +14,10 @@ define openldap::server::globalconf(
   }
 
   # Use a unique hash instead of the actual value to identify it
-  $hashed_value = pw_hash($value, "sha-256", "openldap_global_conf")
-  $name = "${key}-${hashed_value}"
+  $hashed_value = openldap_md5($value, "openldapglobalconf")
+  $hashed_name = "${key}-${hashed_value}"
 
-  openldap_global_conf { $name:
+  openldap_global_conf { $hashed_name:
     ensure   => $ensure,
     provider => $::openldap::server::provider,
     target   => $::openldap::server::conffile,
