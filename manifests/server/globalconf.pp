@@ -1,8 +1,8 @@
 # See README.md for details.
 define openldap::server::globalconf(
-  $ensure = 'present',
   $key,
   $value,
+  $ensure = 'present',
 ) {
 
   if ! defined(Class['openldap::server']) {
