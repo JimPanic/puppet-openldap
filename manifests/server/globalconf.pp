@@ -14,7 +14,7 @@ define openldap::server::globalconf(
   }
 
   # Use a unique hash instead of the actual value to identify it
-  $hashed_value = openldap_md5($value, "openldapglobalconf")
+  $hashed_value = openldap_md5($value, 'openldapglobalconf')
   $hashed_name = "${key}-${hashed_value}"
 
   openldap_global_conf { $hashed_name:
