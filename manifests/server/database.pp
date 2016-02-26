@@ -1,24 +1,24 @@
 # See README.md for details.
 define openldap::server::database(
-  $ensure          = present,
-  $directory       = undef,
-  $suffix          = $title,
-  $backend         = undef,
-  $rootdn          = undef,
-  $rootpw          = undef,
-  $initdb          = undef,
-  $readonly        = false,
-  $sizelimit       = undef,
-  $timelimit       = undef,
-  $updateref       = undef,
-  $limits          = undef,
+  $ensure           = present,
+  $directory        = undef,
+  $suffix           = $title,
+  $backend          = undef,
+  $rootdn           = undef,
+  $rootpw           = undef,
+  $initdb           = undef,
+  $readonly         = false,
+  $sizelimit        = undef,
+  $timelimit        = undef,
+  $updateref        = undef,
+  $limits           = undef,
   # BDB/HDB options
-  $dboptions       = undef,
-  $synctype        = undef,
+  $dboptions        = undef,
+  $synctype         = undef,
   # Synchronization options
-  $mirrormode      = undef,
-  $syncusesubentry = undef,
-  $syncrepl        = undef,
+  $mirrormode       = undef,
+  $syncusesubentry  = undef,
+  $syncrepl         = undef,
 ) {
 
   if ! defined(Class['openldap::server']) {

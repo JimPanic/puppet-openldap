@@ -1,11 +1,15 @@
 require 'spec_helper'
 
+require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. .. .. .. lib puppet_x openldap pw_hash.rb]))
+
 describe Puppet::Type.type(:openldap_global_conf).provider(:olc) do
 
   let(:params) do
     {
-      :title    => 'Security',
-      :value    => 'tls=128'
+      :title    => 'Security-18dec4827672e3bbe0f4bfb89be49936',
+      :key      => 'Security',
+      :value    => 'tls=128',
+      :ensure   => :present,
     }
   end
 
@@ -19,8 +23,8 @@ LDIF
   let(:create_ldif) do
     <<-LDIF
 dn: cn=config
-add: olc#{params[:title]}
-olc#{params[:title]}: #{params[:value]}
+add: olc#{params[:key]}
+olc#{params[:key]}: #{params[:value]}
 LDIF
   end
 
@@ -39,16 +43,23 @@ LDIF
 
   describe 'self.instances' do
     it 'returns an array of cn=config entry resources' do
+      # NOTE: The provider calls a function in the base provider, so it does not provide a command itself anymore.
       provider.class.
         stubs(:slapcat).
-        with('-b', 'cn=config', '-H', 'ldap:///???(objectClass=olcGlobal)').
+        with('(objectClass=olcGlobal)').
         returns(slapcat_output_exists)
 
       instance = provider.class.instances.first
 
-      expect(params[:title]).to match(instance.name)
-      expect(params[:value]).to match(instance.value)
-      expect(instance.ensure).to match(:present)
+      # irb(main):005:0> Digest::MD5.hexdigest("tls=128-openldapglobalconf")
+      # => "18dec4827672e3bbe0f4bfb89be49936"
+
+      expected_title = 'Security-18dec4827672e3bbe0f4bfb89be49936'
+
+      expect(expected_title).to  match(instance.name)
+      expect('Security').to      match(instance.key)
+      expect('tls=128').to       match(instance.value)
+      expect(:present).to        match(instance.ensure)
     end
   end
 
@@ -63,7 +74,7 @@ LDIF
     it 'should return true' do
       provider.class.
         stubs(:slapcat).
-        with('-b', 'cn=config', '-H', 'ldap:///???(objectClass=olcGlobal)').
+        with('(objectClass=olcGlobal)').
         returns(slapcat_output_exists)
       expect(instance.exists?).to be_truthy
     end

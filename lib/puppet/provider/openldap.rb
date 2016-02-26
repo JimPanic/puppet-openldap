@@ -7,8 +7,17 @@ class Puppet::Provider::Openldap < Puppet::Provider
   defaultfor :osfamily => :debian,
              :osfamily => :redhat
 
-  commands :slapcat    => 'slapcat',
-           :ldapmodify => 'ldapmodify'
+  commands :original_slapcat    => 'slapcat',
+           :original_ldapmodify => 'ldapmodify'
+
+  def self.slapcat(filter)
+    original_slapcat(
+      '-b',
+      'cn=config',
+      '-H',
+      "ldap:///???#{filter}"
+    )
+  end
 
   def delimit
     "-\n"
@@ -18,6 +27,10 @@ class Puppet::Provider::Openldap < Puppet::Provider
     dn('cn=config')
   end
 
+  def ldapmodify(path)
+    original_ldapmodify('-Y', 'EXTERNAL', '-H', 'ldapi:///', '-f', path)
+  end
+
   def self.get_entries(items)
     items.
       gsub("\n ", "").
@@ -25,7 +38,6 @@ class Puppet::Provider::Openldap < Puppet::Provider
       select  { |entry| entry =~ /^olc/ }.
       collect { |entry| entry.gsub(/^olc/, '') }
   end
-
 
   def temp_ldif()
     Tempfile.new('openldap_global_conf')
