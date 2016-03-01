@@ -34,9 +34,11 @@ class openldap::server::slapdconf {
       validate_absolute_path($::openldap::server::ssl_key)
 
       openldap::server::globalconf { 'TLSCertificateFile':
+        key   => 'TLSCertificateFile',
         value => $::openldap::server::ssl_cert,
       }
       openldap::server::globalconf { 'TLSCertificateKeyFile':
+        key   => 'TLSCertificateKeyFile',
         value => $::openldap::server::ssl_key,
       }
 
@@ -44,6 +46,7 @@ class openldap::server::slapdconf {
         validate_absolute_path($::openldap::server::ssl_ca)
 
         openldap::server::globalconf { 'TLSCACertificateFile':
+          key   => 'TLSCACertificateFile',
           value => $::openldap::server::ssl_ca,
         }
       }
