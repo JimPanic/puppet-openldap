@@ -55,7 +55,6 @@ Puppet::Type.
   end
 
   def create
-    begin
     ldif = temp_ldif()
 
     ldif << cn_config()
