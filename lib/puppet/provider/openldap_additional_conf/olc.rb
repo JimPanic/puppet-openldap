@@ -98,7 +98,8 @@ Puppet::Type.
       ldapmodify(ldif.path)
 
     rescue Exception => e
-      raise Puppet::Error, "LDIF content:\n#{IO.read(ldif.path)}\nError message: #{e.message}"
+      raise Puppet::Error,
+        "LDIF content:\n#{IO.read(ldif.path)}\n\nError message: #{e.message}\n\nBacktrace:#{e.backtrace}\n"
     end
 
     @property_hash.clear
