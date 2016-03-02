@@ -17,9 +17,9 @@ Puppet::Type.newtype(:openldap_additional_conf) do
   end
 
   newparam(:target) do
-    desc <<-EOS
-    The provider to use: `olc` or `augeas`
-    EOS
+    desc 'The provider to use: `olc` or `augeas`'
+
+    defaultto :olc
   end
 
   newparam(:replace) do
