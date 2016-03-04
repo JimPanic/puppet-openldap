@@ -18,7 +18,7 @@ Puppet::Type.
   mk_resource_methods
 
   def self.instances
-    entries = get_entries(slapcat("(objectClass=olcGlobal)"))
+    entries = get_entries(slapcat('(objectClass=olcGlobal)'))
 
     resources = entries.reduce([]) do |tuples, entry|
       # Return at most two items from split, otherwise value might end up being

@@ -32,7 +32,7 @@ class Puppet::Provider::Openldap < Puppet::Provider
   end
 
   def self.get_entries(items)
-    items.
+    items.strip.
       gsub("\n ", "").
       split("\n").
       select  { |entry| entry =~ /^olc/ }.
