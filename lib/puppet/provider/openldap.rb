@@ -14,6 +14,8 @@ class Puppet::Provider::Openldap < Puppet::Provider
     original_slapcat(
       '-b',
       'cn=config',
+      '-o',
+      'ldif-wrap=no',
       '-H',
       "ldap:///???#{filter}"
     )
