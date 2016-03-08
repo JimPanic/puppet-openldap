@@ -1,6 +1,6 @@
 define openldap::server::additionalconfig (
-  $key,
   $value,
+  $key = $title,
   $replace = true,
   $ensure  = 'present',
 ) {
