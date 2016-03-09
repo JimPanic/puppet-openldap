@@ -120,6 +120,7 @@ Puppet::Type.
   def value=(value)
     t = Tempfile.new('openldap_global_conf')
     t << "dn: cn=config\n"
+    t << "changetype: modify\n"
     if resource[:value].is_a? Hash
       resource[:value].each do |k, v|
         t << "replace: olc#{k}\n"
