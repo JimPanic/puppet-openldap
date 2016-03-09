@@ -1,7 +1,8 @@
 # OpenLDAP
 
-[![Build Status](https://img.shields.io/travis/JimPanic/puppet-openldap/master.svg)](https://travis-ci.org/camptocamp/puppet-openldap)
-[![By Camptocamp](https://img.shields.io/badge/by-camptocamp-fb7047.svg)](http://www.camptocamp.com)
+[![Build Status](https://img.shields.io/travis/JimPanic/puppet-openldap/master.svg)](https://travis-ci.org/JimPanic/puppet-openldap)
+[![Forked from Camptocamp](https://img.shields.io/badge/forked_from-camptocamp-fb7047.svg)](http://www.camptocamp.com)
+[![By panek.work](https://img.shields.io/badge/forked-by-JimPanic-fb7047.svg)](http://panek.work)
 
 ## Overview
 
@@ -90,7 +91,7 @@ openldap::server::config_entry { 'Security':
 }
 ```
 
-###Configuring a database
+### Configuring a database
 
 ```puppet
 openldap::server::database { 'dc=example,dc=com':
@@ -102,7 +103,7 @@ openldap::server::database { 'dc=example,dc=com':
 
 `rootpw` will be automatically converted to a SSHA hash with random salt.
 
-###Configuring modules
+### Configuring modules
 
 ```puppet
 openldap::server::module { 'memberof':
@@ -110,7 +111,7 @@ openldap::server::module { 'memberof':
 }
 ```
 
-###Configuring overlays
+### Configuring overlays
 
 ```puppet
 openldap::server::overlay { 'memberof on dc=example,dc=com':
@@ -118,7 +119,7 @@ openldap::server::overlay { 'memberof on dc=example,dc=com':
 }
 ```
 
-###Configuring ACPs/ACLs
+### Configuring ACPs/ACLs
 
 ```puppet
 openldap::server::access {
@@ -144,7 +145,7 @@ openldap::server::access {
 }
 ```
 
-###Configuring Schemas
+### Configuring Schemas
 ```puppet
 openldap::server::schema { 'samba':
   ensure  => present,
