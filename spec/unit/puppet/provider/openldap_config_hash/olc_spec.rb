@@ -29,6 +29,7 @@ LDIF
   let(:create_ldif) do
     <<-LDIF
 dn: cn=config
+changetype: modify
 add: olcTLSCertificateFile
 olcTLSCertificateFile: /etc/ssl/certs/cert.pem
 -
