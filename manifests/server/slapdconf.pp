@@ -32,20 +32,23 @@ class openldap::server::slapdconf {
     fail 'You must specify a ssl_cert'
   }
 
+  $has_ca = ! empty($::openldap::server::ssl_ca)
+  $has_key = ! empty($::openldap::server::ssl_key)
+
 
   if $::openldap::server::ssl_cert {
-    if empty($::openldap::server::ssl_key) {
+    if ! $has_key {
       fail 'You must specify a ssl_key'
     }
 
     validate_absolute_path($::openldap::server::ssl_cert)
     validate_absolute_path($::openldap::server::ssl_key)
 
-    if $::openldap::server::ssl_ca {
+    if $has_ca {
       validate_absolute_path($::openldap::server::ssl_ca)
     }
 
-    $tls_settings = empty($::openldap::server::ssl_ca) ? {
+    $tls_settings = $has_ca ? {
       false => {
         'TLSCertificateFile'    => $::openldap::server::ssl_cert,
         'TLSCertificateKeyFile' => $::openldap::server::ssl_key,
