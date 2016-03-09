@@ -46,24 +46,23 @@ class openldap::server::slapdconf {
 
     if $has_ca {
       validate_absolute_path($::openldap::server::ssl_ca)
-    }
 
-    $tls_settings = $has_ca ? {
-      false => {
+      $tls_settings = {
         'TLSCertificateFile'    => $::openldap::server::ssl_cert,
         'TLSCertificateKeyFile' => $::openldap::server::ssl_key,
         'TLSCACertificateFile'  => $::openldap::server::ssl_ca,
-      },
-      true => {
-        'TLSCertificateFile'    => $::openldap::server::ssl_cert,
-        'TLSCertificateKeyFile' => $::openldap::server::ssl_key,
+      }
+    } else {
+      $tls_settings = {
+          'TLSCertificateFile'    => $::openldap::server::ssl_cert,
+          'TLSCertificateKeyFile' => $::openldap::server::ssl_key,
       }
     }
 
     openldap::server::config_hash { 'TLS Settings':
       value => $tls_settings,
     }
-  } 
+  }
 
   openldap::server::database { 'dc=my-domain,dc=com':
     ensure => absent,
