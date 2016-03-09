@@ -24,7 +24,7 @@ LDIF
     <<-LDIF
 dn: cn=config
 changetype: modify
-add: olc#{params[:key]}
+replace: olc#{params[:key]}
 olc#{params[:key]}: #{params[:value]}
 LDIF
   end

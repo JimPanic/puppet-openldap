@@ -47,54 +47,29 @@ Puppet::Type.
     end
   end
 
-  def add_or_replace_key(key)
-
-    use_replace = %w[ConfigFile ConfigDir AddContentAcl ArgsFile
-      AuthzPolicy Backend Concurrency ConnMaxPending ConnMaxPendingAuth Database
-      DefaultSearchBase GentleHUP Hidden IdleTimeout IndexSubstrIfMinLen
-      IndexSubstrIfMaxLen IndexSubstrAnyLen IndexSubstrAnyStep IndexIntLen LastMod
-      ListenerThreads LocalSSF LogFile MaxDerefDepth MirrorMode ModulePath Monitoring
-      Overlay PasswordCryptSaltFormat PidFile PluginLogFile ReadOnly Referral
-      ReplicaArgsFile ReplicaPidFile ReplicationInterval ReplogFile ReverseLookup
-      RootDN RootPW SaslAuxprops SaslHost SaslRealm SaslSecProps SchemaDN SizeLimit
-      SockbufMaxIncoming SockbufMaxIncomingAuth Subordinate SyncUseSubentry Threads
-      TLSCACertificateFile TLSCACertificatePath TLSCertificateFile
-      TLSCertificateKeyFile TLSCipherSuite TLSCRLCheck TLSCRLFile TLSRandFile
-      TLSVerifyClient TLSDHParamFile TLSProtocolMin ToolThreads UpdateDN WriteTimeout
-      DbDirectory DbCheckpoint DbNoSync DbMaxReaders DbMaxSize DbMode DbSearchStack
-      PPolicyDefault PPolicyHashCleartext PPolicyForwardUpdates PPolicyUseLockout
-      MemberOfDN MemberOfDangling MemberOfRefInt MemberOfGroupOC MemberOfMemberAD
-      MemberOfMemberOfAD MemberOfDanglingError SpCheckpoint SpSessionlog SpNoPresent
-      SpReloadHint]
-
-    return use_replace.include?(key.to_s) ?
-      "replace: olc#{key}\n" :
-      "add: olc#{key}\n"
-  end
-
   def create
-    t = Tempfile.new('openldap_global_conf')
-    t << "dn: cn=config\n"
-    t << "changetype: modify\n"
+    ldif = temp_ldif()
+    ldif << cn_config()
+    ldif << changetype('modify')
 
     if resource[:value].is_a? Hash
-      t << resource[:value].collect do |k, v|
-        [add_or_replace_key(k), "olc#{k}: #{v}\n"].join
-      end.join("-\n")
-      t << "-\n"
+      ldif << resource[:value].collect do |k, v|
+        [add_or_replace_key(k), key_value(k, v)].join
+      end.join(delimit)
+      ldif << delimit
     else
-      t << "add: olc#{resource[:name]}\n"
-      t << "olc#{resource[:name]}: #{resource[:value]}\n"
+      ldif << add_or_replace_key(resource[:name])
+      ldif << key_value(resource[:name], resource[:value])
     end
 
-    t.close
+    ldif.close
 
-    ldif_content = IO.read(t.path)
+    ldif_content = IO.read(ldif.path)
 
     Puppet.debug(ldif_content)
 
     begin
-      ldapmodify(t.path)
+      ldapmodify(ldif.path)
 
     rescue Exception => e
       raise Puppet::Error, "LDIF content:\n#{ldif_content}\nError message: #{e.message}"
@@ -106,24 +81,25 @@ Puppet::Type.
   end
 
   def destroy
-    t = Tempfile.new('openldap_global_conf')
-    t << "dn: cn=config\n"
-    t << "changetype: modify\n"
+    ldif = temp_ldif()
+    ldif << cn_config()
+    ldif << changetype('modify')
+
     if resource[:value].is_a? Hash
-      t << resource[:value].keys.collect { |key| "delete: olc#{key}\n" }.join("-\n")
-      t << "-\n"
+      ldif << resource[:value].keys.collect { |key| delete(key) }.join(delimit())
+      ldif << delimit()
     else
-      t << "delete: olc#{name}\n"
+      ldif << delete(name)
     end
 
-    t.close
+    ldif.close
 
-    ldif_content = IO.read(t.path)
+    ldif_content = IO.read(ldif.path)
 
     Puppet.debug(ldif_content)
 
     begin
-      ldapmodify(t.path)
+      ldapmodify(ldif.path)
 
     rescue Exception => e
       raise Puppet::Error, "LDIF content:\n#{ldif_content}\nError message: #{e.message}"
@@ -147,27 +123,32 @@ Puppet::Type.
   end
 
   def value=(value)
-    t = Tempfile.new('openldap_global_conf')
-    t << "dn: cn=config\n"
-    t << "changetype: modify\n"
+    ldif = temp_ldif()
+    ldif << cn_config()
+    ldif << changetype('modify')
+
     if resource[:value].is_a? Hash
       resource[:value].each do |k, v|
-        t << "replace: olc#{k}\n"
-        t << "olc#{k}: #{v}\n"
-        t << "-\n"
+        ldif << replace_value(k)
+        ldif << key_value(k, v)
+        ldif << delimit()
       end
     else
-      t << "replace: olc#{name}\n"
-      t << "olc#{name}: #{value}\n"
+        ldif << replace_value(name)
+        ldif << key_value(name, value)
     end
-    t.close
-    Puppet.debug(IO.read(t.path))
+
+    ldif.close
+
+    Puppet.debug(IO.read(ldif.path))
+
     begin
-      ldapmodify(t.path)
+      ldapmodify(ldif.path)
+
     rescue Exception => e
-      raise Puppet::Error, "LDIF content:\n#{IO.read(t.path)}\nError message: #{e.message}"
+      raise Puppet::Error, "LDIF content:\n#{IO.read(ldif.path)}\nError message: #{e.message}"
     end
+
     @property_hash[:value] = value
   end
-
 end

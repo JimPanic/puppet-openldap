@@ -59,7 +59,7 @@ Puppet::Type.
 
     ldif << cn_config()
     ldif << changetype('modify')
-    ldif << add_or_replace_key()
+    ldif << add_or_replace_key(resource[:key], resource[:replace])
     ldif << key_value(resource[:key], resource[:value])
     ldif.close
 
@@ -80,7 +80,7 @@ Puppet::Type.
     ldif_content
   end
 
-  def add_or_replace_key
+  def add_or_replace_manual
     return replace_value(resource[:key]) if resource[:replace] == :true
     return add(resource[:key])
   end

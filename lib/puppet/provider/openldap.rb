@@ -52,6 +52,10 @@ class Puppet::Provider::Openldap < Puppet::Provider
     "changetype: #{t}\n"
   end
 
+  def delimit
+    "-\n"
+  end
+
   def add(key)
     "add: olc#{key}\n"
   end
@@ -66,5 +70,40 @@ class Puppet::Provider::Openldap < Puppet::Provider
 
   def key_value(key, value)
     "olc#{key}: #{value}\n"
+  end
+
+  def add_or_replace_key(key, force_replace = :false)
+    # This list of possible attributes of cn=config has been extracted from a
+    # running slapd with the following command:
+    #   ldapsearch -s base -b cn=Subschema attributeTypes -o ldif-wrap=no | \
+    #     grep SINGLE-VALUE | grep "NAME 'olc" | \
+    #     sed -e "s|.*NAME '||g" \
+    #         -e "s|' SYNTAX.*||g" \
+    #         -e "s|' EQUALITY.*||g" \
+    #         -e "s|' DESC.*||g"
+
+    single_value_attributes = %w[ConfigFile ConfigDir AddContentAcl ArgsFile
+      AuthzPolicy Backend Concurrency ConnMaxPending ConnMaxPendingAuth Database
+      DefaultSearchBase GentleHUP Hidden IdleTimeout IndexSubstrIfMinLen
+      IndexSubstrIfMaxLen IndexSubstrAnyLen IndexSubstrAnyStep IndexIntLen LastMod
+      ListenerThreads LocalSSF LogFile MaxDerefDepth MirrorMode ModulePath Monitoring
+      Overlay PasswordCryptSaltFormat PidFile PluginLogFile ReadOnly Referral
+      ReplicaArgsFile ReplicaPidFile ReplicationInterval ReplogFile ReverseLookup
+      RootDN RootPW SaslAuxprops SaslHost SaslRealm SaslSecProps SchemaDN SizeLimit
+      SockbufMaxIncoming SockbufMaxIncomingAuth Subordinate SyncUseSubentry Threads
+      TLSCACertificateFile TLSCACertificatePath TLSCertificateFile
+      TLSCertificateKeyFile TLSCipherSuite TLSCRLCheck TLSCRLFile TLSRandFile
+      TLSVerifyClient TLSDHParamFile TLSProtocolMin ToolThreads UpdateDN WriteTimeout
+      DbDirectory DbCheckpoint DbNoSync DbMaxReaders DbMaxSize DbMode DbSearchStack
+      PPolicyDefault PPolicyHashCleartext PPolicyForwardUpdates PPolicyUseLockout
+      MemberOfDN MemberOfDangling MemberOfRefInt MemberOfGroupOC MemberOfMemberAD
+      MemberOfMemberOfAD MemberOfDanglingError SpCheckpoint SpSessionlog SpNoPresent
+      SpReloadHint]
+
+    use_replace = single_value_attributes.include?(key.to_s) || force_replace == :true
+
+    return use_replace ?
+      replace_value(key) :
+      add(key)
   end
 end
