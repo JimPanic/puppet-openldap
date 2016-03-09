@@ -56,6 +56,7 @@ Puppet::Type.
       t << resource[:value].collect do |k, v|
         "add: olc#{k}\nolc#{k}: #{v}\n"
       end.join("-\n")
+      t << "-\n"
     else
       t << "add: olc#{resource[:name]}\n"
       t << "olc#{resource[:name]}: #{resource[:value]}\n"
@@ -85,6 +86,7 @@ Puppet::Type.
     t << "changetype: modify\n"
     if resource[:value].is_a? Hash
       t << resource[:value].keys.collect { |key| "delete: olc#{key}\n" }.join("-\n")
+      t << "-\n"
     else
       t << "delete: olc#{name}\n"
     end

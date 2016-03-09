@@ -35,6 +35,7 @@ olcTLSCertificateFile: /etc/ssl/certs/cert.pem
 -
 add: olcTLSCertificateKeyFile
 olcTLSCertificateKeyFile: /etc/ssl/private/key.pem
+-
 LDIF
   end
 
