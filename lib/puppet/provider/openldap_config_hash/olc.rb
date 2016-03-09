@@ -47,6 +47,31 @@ Puppet::Type.
     end
   end
 
+  def add_or_replace_key(key)
+
+    use_replace = %w[ConfigFile ConfigDir AddContentAcl ArgsFile
+      AuthzPolicy Backend Concurrency ConnMaxPending ConnMaxPendingAuth Database
+      DefaultSearchBase GentleHUP Hidden IdleTimeout IndexSubstrIfMinLen
+      IndexSubstrIfMaxLen IndexSubstrAnyLen IndexSubstrAnyStep IndexIntLen LastMod
+      ListenerThreads LocalSSF LogFile MaxDerefDepth MirrorMode ModulePath Monitoring
+      Overlay PasswordCryptSaltFormat PidFile PluginLogFile ReadOnly Referral
+      ReplicaArgsFile ReplicaPidFile ReplicationInterval ReplogFile ReverseLookup
+      RootDN RootPW SaslAuxprops SaslHost SaslRealm SaslSecProps SchemaDN SizeLimit
+      SockbufMaxIncoming SockbufMaxIncomingAuth Subordinate SyncUseSubentry Threads
+      TLSCACertificateFile TLSCACertificatePath TLSCertificateFile
+      TLSCertificateKeyFile TLSCipherSuite TLSCRLCheck TLSCRLFile TLSRandFile
+      TLSVerifyClient TLSDHParamFile TLSProtocolMin ToolThreads UpdateDN WriteTimeout
+      DbDirectory DbCheckpoint DbNoSync DbMaxReaders DbMaxSize DbMode DbSearchStack
+      PPolicyDefault PPolicyHashCleartext PPolicyForwardUpdates PPolicyUseLockout
+      MemberOfDN MemberOfDangling MemberOfRefInt MemberOfGroupOC MemberOfMemberAD
+      MemberOfMemberOfAD MemberOfDanglingError SpCheckpoint SpSessionlog SpNoPresent
+      SpReloadHint]
+
+    return use_replace.include?(key.to_s) ?
+      "replace: olc#{key}\n" :
+      "add: olc#{key}\n"
+  end
+
   def create
     t = Tempfile.new('openldap_global_conf')
     t << "dn: cn=config\n"
@@ -54,7 +79,7 @@ Puppet::Type.
 
     if resource[:value].is_a? Hash
       t << resource[:value].collect do |k, v|
-        "add: olc#{k}\nolc#{k}: #{v}\n"
+        [add_or_replace_key(k), "olc#{k}: #{v}\n"].join
       end.join("-\n")
       t << "-\n"
     else

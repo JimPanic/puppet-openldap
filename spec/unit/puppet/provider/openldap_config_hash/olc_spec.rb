@@ -14,6 +14,7 @@ describe Puppet::Type.type(:openldap_config_hash).provider(:olc) do
       :value    => {
 	:TLSCertificateFile    => '/etc/ssl/certs/cert.pem',
         :TLSCertificateKeyFile => '/etc/ssl/private/key.pem',
+        :LogLevel              => 'stats'
       }
     }
   end
@@ -30,11 +31,14 @@ LDIF
     <<-LDIF
 dn: cn=config
 changetype: modify
-add: olcTLSCertificateFile
+replace: olcTLSCertificateFile
 olcTLSCertificateFile: /etc/ssl/certs/cert.pem
 -
-add: olcTLSCertificateKeyFile
+replace: olcTLSCertificateKeyFile
 olcTLSCertificateKeyFile: /etc/ssl/private/key.pem
+-
+add: olcLogLevel
+olcLogLevel: stats
 -
 LDIF
   end
