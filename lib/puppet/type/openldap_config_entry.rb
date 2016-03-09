@@ -32,7 +32,7 @@ Puppet::Type.newtype(:openldap_config_entry) do
     Defaults to false.
     EOS
 
-    defaultto :false
+    defaultto :true
     newvalues(:true, :false)#, 'true', 'false')
 
     #munge do |value|
