@@ -50,6 +50,7 @@ Puppet::Type.
   def create
     t = Tempfile.new('openldap_global_conf')
     t << "dn: cn=config\n"
+    t << "changetype: modify\n"
 
     if resource[:value].is_a? Hash
       t << resource[:value].collect do |k, v|
@@ -81,6 +82,7 @@ Puppet::Type.
   def destroy
     t = Tempfile.new('openldap_global_conf')
     t << "dn: cn=config\n"
+    t << "changetype: modify\n"
     if resource[:value].is_a? Hash
       t << resource[:value].keys.collect { |key| "delete: olc#{key}\n" }.join("-\n")
     else
