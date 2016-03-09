@@ -2,7 +2,7 @@
 
 [![Build Status](https://img.shields.io/travis/JimPanic/puppet-openldap/master.svg)](https://travis-ci.org/JimPanic/puppet-openldap)
 [![Forked from Camptocamp](https://img.shields.io/badge/forked_from-camptocamp-fb7047.svg)](http://www.camptocamp.com)
-[![By panek.work](https://img.shields.io/badge/forked_by-JimPanic-fb7047.svg)](http://panek.work)
+[![By panek.work](https://img.shields.io/badge/by-panek.work-fb7047.svg)](http://panek.work)
 
 ## Overview
 
