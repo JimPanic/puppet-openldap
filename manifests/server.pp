@@ -45,5 +45,6 @@ class openldap::server(
       Class['openldap::server::slapdconf'] ->
       Class['openldap::server']
     }
+    default: { fail('Unknown provider') }
   }
 }

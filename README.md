@@ -1,36 +1,30 @@
-OpenLDAP
-========
+# OpenLDAP
 
-[![Puppet Forge Version](http://img.shields.io/puppetforge/v/camptocamp/openldap.svg)](https://forge.puppetlabs.com/camptocamp/openldap)
-[![Puppet Forge Downloads](http://img.shields.io/puppetforge/dt/camptocamp/openldap.svg)](https://forge.puppetlabs.com/camptocamp/openldap)
-[![Build Status](https://img.shields.io/travis/camptocamp/puppet-openldap/master.svg)](https://travis-ci.org/camptocamp/puppet-openldap)
-[![Puppet Forge Endorsement](https://img.shields.io/puppetforge/e/camptocamp/openldap.svg)](https://forge.puppetlabs.com/camptocamp/openldap)
-[![Gemnasium](https://img.shields.io/gemnasium/camptocamp/puppet-openldap.svg)](https://gemnasium.com/camptocamp/puppet-openldap)
+[![Build Status](https://img.shields.io/travis/JimPanic/puppet-openldap/master.svg)](https://travis-ci.org/camptocamp/puppet-openldap)
 [![By Camptocamp](https://img.shields.io/badge/by-camptocamp-fb7047.svg)](http://www.camptocamp.com)
 
-Overview
---------
+## Overview
 
 The openldap module allows you to easily manage OpenLDAP with Puppet.
 By default it will use OLC (cn=config).
 
-Features supported per provider
--------------------------------
+## Features supported per provider
 
-Object      | olc (slapd.d) | augeas (slapd.conf)
-------------|---------------|-----------
-global_conf | Y             | N
-database    | Y             | Y
-module      | Y             | N
-overlay     | Y             | N
-access      | Y             | N
-index       | Y             | N
-schema      | Y             | N
 
-Usage
------
+Object          | olc (slapd.d) | augeas (slapd.conf)
+----------------|---------------|-----------
+config_hash     | Y             | N
+config_entry    | Y             | N
+database        | Y             | Y
+module          | Y             | N
+overlay         | Y             | N
+access          | Y             | N
+index           | Y             | N
+schema          | Y             | N
 
-###Configuring the client
+## Usage
+
+### Configuring the client
 
 ```puppet
 class { 'openldap::client': }
@@ -46,7 +40,7 @@ class { 'openldap::client':
 }
 ```
 
-###Configuring the server
+### Configuring the server
 
 ```puppet
 class { 'openldap::server': }
@@ -88,11 +82,10 @@ class { 'openldap::server':
 }
 ```
 
-Configuring a global parameter:
+Configuring a config entry (``olcSecurity``):
 
 ```puppet
-openldap::server::globalconf { 'security':
-  ensure => present,
+openldap::server::config_entry { 'Security':
   value  => 'tls=128',
 }
 ```
