@@ -1,4 +1,4 @@
-Puppet::Type.newtype(:openldap_additional_conf) do
+Puppet::Type.newtype(:openldap_config_entry) do
 
   ensurable
 

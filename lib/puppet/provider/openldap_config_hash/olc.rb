@@ -2,7 +2,7 @@ require 'tempfile'
 require File.expand_path(File.join(File.dirname(__FILE__), %w[.. openldap]))
 
 Puppet::Type.
-  type(:openldap_global_conf).
+  type(:openldap_config_hash).
   provide(:olc, :parent => Puppet::Provider::Openldap) do
 
   defaultfor :osfamily => :debian, :osfamily => :redhat

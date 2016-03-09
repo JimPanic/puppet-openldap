@@ -1,10 +1,10 @@
 require 'spec_helper'
 
-describe Puppet::Type.type(:openldap_global_conf).provider(:olc) do
+describe Puppet::Type.type(:openldap_config_hash).provider(:olc) do
 
   let(:params) do
     {
-      # openldap::server::globalconf { 'TLSCertificate':
+      # openldap::server::config_hash { 'TLSCertificate':
       #    value => {
       #      'TLSCertificateFile'    => $::openldap::server::ssl_cert,
       #      'TLSCertificateKeyFile' => $::openldap::server::ssl_key,
@@ -38,7 +38,7 @@ LDIF
   end
 
   let(:resource) do
-    Puppet::Type.type(:openldap_global_conf).new(params)
+    Puppet::Type.type(:openldap_config_hash).new(params)
   end
 
   let(:provider) do

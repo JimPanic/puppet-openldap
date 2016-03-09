@@ -1,5 +1,5 @@
 # See README.md for details.
-define openldap::server::globalconf(
+define openldap::server::config_hash(
   $value,
   $ensure = 'present',
 ) {
@@ -11,7 +11,7 @@ define openldap::server::globalconf(
   if $::openldap::server::provider == 'augeas' {
     Openldap::Server::Globalconf[$title] ~> Class['openldap::server::service']
   }
-  openldap_global_conf { $name:
+  openldap_config_hash { $name:
     ensure   => $ensure,
     provider => $::openldap::server::provider,
     target   => $::openldap::server::conffile,

@@ -2,7 +2,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), %w[.. openldap]))
 require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. .. puppet_x openldap pw_hash.rb]))
 
 Puppet::Type.
-  type(:openldap_additional_conf).
+  type(:openldap_config_entry).
   provide(:olc, :parent => Puppet::Provider::Openldap) do
 
   desc <<-EOS
@@ -28,7 +28,7 @@ Puppet::Type.
     end
 
     resources.collect do |key, value|
-      name = "#{key}-#{Puppet::Puppet_X::Openldap::PwHash.hash_string(value, 'openldapadditionalconfig')}"
+      name = "#{key}-#{Puppet::Puppet_X::Openldap::PwHash.hash_string(value, 'openldap_config_entry')}"
 
       new(
         # XXX: Is setting the name param here necessary or even

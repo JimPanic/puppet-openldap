@@ -2,7 +2,7 @@ require 'spec_helper'
 
 require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. .. .. .. lib puppet_x openldap pw_hash.rb]))
 
-describe Puppet::Type.type(:openldap_additional_conf).provider(:olc) do
+describe Puppet::Type.type(:openldap_config_entry).provider(:olc) do
 
   let(:params) do
     {
@@ -30,7 +30,7 @@ LDIF
   end
 
   let(:resource) do
-    Puppet::Type.type(:openldap_additional_conf).new(params)
+    Puppet::Type.type(:openldap_config_entry).new(params)
   end
 
   let(:provider) do
@@ -54,9 +54,9 @@ LDIF
 
       # irb(main):001:0> require 'digest/md5'
       # irb(main):002:0> Digest::MD5.hexdigest("tls=128-openldapadditionalconfig")
-      # => "598323bfbebb4b76f41659e1411fa621"
+      # => "2d8a2d779763deb537847b94b708f465"
 
-      expected_title = 'Security-598323bfbebb4b76f41659e1411fa621'
+      expected_title = 'Security-2d8a2d779763deb537847b94b708f465'
 
       expect(expected_title).to  match(instance.name)
       expect('Security').to      match(instance.key)

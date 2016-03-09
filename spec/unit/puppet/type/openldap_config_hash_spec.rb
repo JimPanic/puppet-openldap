@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Puppet::Type.type(:openldap_global_conf) do
+describe Puppet::Type.type(:openldap_config_hash) do
   on_supported_os.each do |os, facts|
     context "on #{os}" do
       before :each do

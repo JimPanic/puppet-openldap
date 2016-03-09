@@ -7,7 +7,7 @@ describe 'openldap::server' do
       pp = <<-EOS
         class { 'openldap::server': }
 
-        openldap::server::additionalconfig { 'loglevel':
+        openldap::server::config_entry { 'loglevel':
           key     => 'LogLevel',
           value   => '-1',
           replace => true,
