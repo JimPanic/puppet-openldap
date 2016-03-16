@@ -21,8 +21,8 @@ group :development, :unit_tests do
   gem 'puppet-lint-file_source_rights-check',              :require => false
   gem 'puppet-lint-alias-check',                           :require => false
   gem 'rspec-puppet-facts',                                :require => false
-  gem 'ruby-augeas',                                       :require => false
-  gem 'github_changelog_generator',                        :require => false if RUBY_VERSION !~ /^1\.8/
+  #gem 'ruby-augeas',                                       :require => false
+  #gem 'github_changelog_generator',                        :require => false if RUBY_VERSION !~ /^1\.8/
   gem 'puppet-blacksmith',                                 :require => false if RUBY_VERSION !~ /^1\./
   gem 'parallel_tests'
 end
