@@ -58,7 +58,6 @@ LDIF
 
   describe 'self.instances' do
     it 'returns an array of cn=config entry resources' do
-      # NOTE: The provider calls a function in the base provider, so it does not provide a command itself anymore.
       r = provider.class.
         stubs(:slapcat).
         with('(objectClass=olcGlobal)').
@@ -67,15 +66,6 @@ LDIF
       instances = provider.class.instances
 
       expect(instances.class).to match(Array)
-
-      #expect(instance.value).to match(params[:value])
-
-      # irb(main):005:0> Digest::MD5.hexdigest("tls=128-openldapglobalconf")
-      # => "18dec4827672e3bbe0f4bfb89be49936"
-
-      #expect('Security').to      match(instance.key)
-      #expect('tls=128').to       match(instance.value)
-      #expect(:present).to        match(instance.ensure)
     end
   end
 
