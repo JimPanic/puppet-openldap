@@ -1,106 +1,90 @@
-require 'tempfile'
+require File.expand_path(File.join(File.dirname(__FILE__), %w[.. openldap]))
 
-Puppet::Type.type(:openldap_access).provide(:olc) do
-
-  # TODO: Use ruby bindings (can't find one that support IPC)
+Puppet::Type.
+  type(:openldap_access).
+  provide(:olc, :parent => Puppet::Provider::Openldap) do
 
   defaultfor :osfamily => :debian, :osfamily => :redhat
-
-  commands :slapcat => 'slapcat', :ldapmodify => 'ldapmodify'
 
   mk_resource_methods
 
   def self.instances
-    # TODO: restict to bdb, hdb and globals
-    i = []
-    slapcat(
-      '-b',
-      'cn=config',
-      '-o',
-      'ldif-wrap=no',
-      '-H',
-      'ldap:///???(olcAccess=*)'
-    ).split("\n\n").collect do |paragraph|
+
+    acl_entries = []
+
+    # Not sure this is needed. But we will restrict to mdb, hdb, bdb, frontend
+    # and config for now.
+    entries = get_paragraphs(slapcat('(olcAccess=*)')).select do |entry|
+      entry.first.strip =~
+        /^dn: olcDatabase.*(mdb|hdb|bdb|frontend|config),cn=config$/
+    end
+
+
+    entries.each do |entry|
       access = nil
       suffix = nil
       position = nil
-      paragraph.gsub("\n ", '').split("\n").collect do |line|
+
+      entry.collect do |line|
         case line
         when /^olcDatabase: /
           suffix = "cn=#{line.split(' ')[1].gsub(/\{-?\d+\}/, '')}"
+
         when /^olcSuffix: /
           suffix = line.split(' ')[1]
+
         when /^olcAccess: /
-          position, what, bys = line.match(/^olcAccess:\s+\{(\d+)\}to\s+(\S+)(\s+by\s+.*)+$/).captures
           access = []
-          bys.split(/(?= by .+)/).each { |b|
-            access << b.lstrip
-          }
-          if (position.to_i + 1) == getCountOfOlcAccess(suffix)
-            islast = true
-          else
-            islast = false
-          end
-          i << new(
-            :name     => "#{position} on #{suffix}",
+          position, what, bys = line.
+            match(/^olcAccess:\s+\{(\d+)\}to\s+(\S+)(\s+by\s+.*)+$/).
+            captures
+
+          bys.split(/(?= by .+)/).each { |b| access << b.lstrip }
+
+          islast = (position.to_i + 1) == get_count_for_entry(entry)
+
+          params = {
+            :name     => "#{position} to #{what} on #{suffix}",
             :ensure   => :present,
             :position => position,
             :what     => what,
             :access   => access,
             :suffix   => suffix,
             :islast   => islast
-          )
+	  }
+
+          acl_entries << new(params)
         end
       end
     end
 
-    i
+    acl_entries
   end
 
   def self.prefetch(resources)
     accesses = instances
     resources.keys.each do |name|
-      if provider = accesses.find{ |access|
-        access.suffix == resources[name][:suffix] &&
-        access.position == resources[name][:position]
-      }
-        resources[name].provider = provider
+      provider = accesses.find do |access|
+        access.what   == resources[name][:what] &&
+        access.access == resources[name][:access] &&
+        access.suffix == resources[name][:suffix]
       end
+
+      resources[name].provider = provider if provider
     end
   end
 
   def self.getDn(suffix)
-    if suffix == 'cn=frontend'
-      return 'olcDatabase={-1}frontend,cn=config'
-    elsif suffix == 'cn=config'
-      return 'olcDatabase={0}config,cn=config'
-    elsif suffix == 'cn=monitor'
-      slapcat(
-        '-b',
-        'cn=config',
-	'-o',
-	'ldif-wrap=no',
-        '-H',
-        "ldap:///???(olcDatabase=monitor)"
-      ).split("\n").collect do |line|
-        if line =~ /^dn: /
-          return line.split(' ')[1]
-        end
-      end
-    else
-      slapcat(
-        '-b',
-        'cn=config',
-        '-o',
-        'ldif-wrap=no',
-        '-H',
-        "ldap:///???(olcSuffix=#{suffix})"
-      ).split("\n").collect do |line|
-        if line =~ /^dn: /
-          return line.split(' ')[1]
-        end
-      end
-    end
+    return 'olcDatabase={-1}frontend,cn=config' if suffix == 'cn=frontend'
+    return 'olcDatabase={0}config,cn=config'    if suffix == 'cn=config'
+
+    suffix = 'monitor' if suffix == 'cn=monitor'
+
+    dn_line = get_paragraphs(slapcat("(olcSuffix=#{suffix})")).
+      first.
+      detect { |line| line =~ /^dn: / }
+
+    return dn_line.nil? ? nil : dn_line.split(' ', 2).last
   end
 
   def exists?
@@ -108,48 +92,59 @@ Puppet::Type.type(:openldap_access).provide(:olc) do
   end
 
   def create
+    position = ''
     position = "{#{resource[:position]}}" if resource[:position]
-    t = Tempfile.new('openldap_access')
-    t << "dn: #{self.class.getDn(resource[:suffix])}\n"
-    t << "add: olcAccess\n"
-    if resource[:position]
-      t << "olcAccess: {#{resource[:position]}}to #{resource[:what]}\n"
-    else
-      t << "olcAccess: to #{resource[:what]}\n"
-    end
-    resource[:access].each do |a|
-      t << "  #{a}\n"
-    end
-    t.close
-    Puppet.debug(IO.read t.path)
+
+    ldif = temp_ldif('openldap_access')
+
+    ldif << dn(self.class.getDn(resource[:suffix]))
+    ldif << add(:Access)
+    ldif << "olcAccess: #{position}to #{resource[:what]}\n"
+
+    resource[:access].each { |a| ldif << "  #{a}\n" }
+
+    ldif.close
+
+    ldif_content = IO.read(ldif.path)
+
+    Puppet.debug(ldif_content)
+
     begin
-      ldapmodify('-Y', 'EXTERNAL', '-H', 'ldapi:///', '-f', t.path)
+      ldapmodify(ldif.path)
+
     rescue Exception => e
-      raise Puppet::Error, "LDIF content:\n#{IO.read t.path}\nError message: #{e.message}"
+      cnconfig = self.class.slapcat('(olcAccess=*)')
+      raise Puppet::Error, "LDIF content:\n#{ldif_content}\nError message: #{e.message}\n\n\n#{cnconfig}"
     end
   end
 
   def destroy
-    t = Tempfile.new('openldap_access')
-    t << "dn: #{self.class.getDn(@property_hash[:suffix])}\n"
-    t << "changetype: modify\n"
-    t << "delete: olcAccess\n"
-    t << "olcAccess: {#{@property_hash[:position]}}\n"
+    ldif = temp_ldif('openldap_access')
+    ldif << dn(self.class.getDn(@property_hash[:suffix]))
+    ldif << changetype(:modify)
+    ldif << del(:Access)
+    ldif << "olcAccess: {#{@property_hash[:position]}}\n"
+
     if resource[:islast]
-      t << "\n\n"
-      t << "dn: #{getDn(resource[:suffix])}\n"
-      t << "changetype: modify\n"
-      t << "delete: olcAccess\n"
-      (resource[:position].to_i+1..getCountOfOlcAccess(resource[:suffix])).each do |n|
-        t << "olcAccess: {#{n}}\n"
-      end
+      ldif << "\n\n"
+      ldif << dn(getDn(resource[:suffix]))
+      ldif << changetype(:modify)
+      ldif << del(:Access)
+
+      from = resource[:position].to_i + 1
+      to   = get_count_for_suffix(resource[:suffix])
+
+      (from..to).each { |n| ldif << "olcAccess: {#{n}}\n" }
     end
+
     t.close
+
     Puppet.debug(IO.read t.path)
+
     slapdd('-b', 'cn=config', '-l', t.path)
   end
 
-  def initialize(value={})
+  def initialize(value = {})
     super(value)
     @property_flush = {}
   end
@@ -174,56 +169,71 @@ Puppet::Type.type(:openldap_access).provide(:olc) do
     @property_flush[:islast] = value
   end
 
-  def getCurrentOlcAccess(suffix)
-    i = []
-    slapcat(
-      '-H',
-      "ldap:///#{self.class.getDn(suffix)}???(olcAccess=*)"
-    ).split("\n\n").collect do |paragraph|
-      paragraph.gsub("\n ", '').split("\n").collect do |line|
-        case line
-        when /^olcAccess: /
-          position, content = line.match(/^olcAccess:\s+\{(\d+)\}(.*)$/).captures
-          i << {
-            :position => position,
-            :content => content,
-          }
-        end
-      end
+  def self.get_count_for_entry(entry)
+    entry.reduce(0) do |count, line|
+      count += 1 if line =~ /^olcAccess: /
+      count
     end
-    return i
+  end
+
+  def self.get_count_for_suffix(suffix)
+    get_count_for_entry(
+      get_paragraphs(
+        slapcat('(olcAccess=*)', getDn(suffix))
+      ).first
+    )
+  end
+
+  def get_current(suffix)
+    paragraphs = get_paragraphs(slapcat('(olcAccess=*)', self.class.getDn(suffix)))
+
+    paragraphs.collect do |paragraph|
+      paragraph.
+        select { |line| line =~ /^olcAccess: / }.
+        collect do |line|
+          position, content = line.match(/^olcAccess:\s+\{(\d+)\}(.*)$/).captures
+
+          { :position => position,
+            :content  => content }
+        end
+    end
   end
 
   def flush
-    if not @property_flush.empty?
-      current_olcAccess = getCurrentOlcAccess(resource[:suffix])
-      t = Tempfile.new('openldap_access')
-      t << "dn: #{self.class.getDn(resource[:suffix])}\n"
-      t << "changetype: modify\n"
-      t << "replace: olcAccess\n"
-      if resource[:position]
-        position = resource[:position]
+    return if @property_flush.empty?
+
+    current_olcAccess = get_current(resource[:suffix])
+    position          = resource[:position] ||
+                        @property_hash[:position]
+    ldif              = temp_ldif('openldap_access')
+
+    ldif << dn(self.class.getDn(resource[:suffix]))
+    ldif << changetype(:modify)
+    ldif << replace_value(:Access)
+
+    current_olcAccess.each do |current|
+      if current[:position].to_i == position.to_i
+        ldif << "olcAccess: {#{position}}to #{resource[:what]}\n"
+
+        resource[:access].each { |a| ldif << "  #{a}\n" }
       else
-        position = @property_hash[:position]
-      end
-      current_olcAccess.each do |olcAccess|
-        if olcAccess[:position].to_i == position.to_i
-          t << "olcAccess: {#{position}}to #{resource[:what]}\n"
-          resource[:access].each do |a|
-            t << "  #{a}\n"
-          end
-        else
-          t << "olcAccess: {#{olcAccess[:position]}}#{olcAccess[:content]}\n"
-        end
-      end
-      t.close
-      Puppet.debug(IO.read t.path)
-      begin
-        ldapmodify('-Y', 'EXTERNAL', '-H', 'ldapi:///', '-f', t.path)
-      rescue Exception => e
-        raise Puppet::Error, "LDIF content:\n#{IO.read t.path}\nError message: #{e.message}"
+        ldif << "olcAccess: {#{current[:position]}}#{current[:content]}\n"
       end
     end
+
+    ldif.close
+
+    ldif_content = IO.read(ldif.path)
+
+    Puppet.debug(ldif_content)
+
+    begin
+      ldapmodify(ldif.path)
+
+    rescue Exception => e
+      raise Puppet::Error, "LDIF content:\n#{ldif_content}\nError message: #{e.message}"
+    end
+
     @property_hash = resource.to_hash
   end
 end

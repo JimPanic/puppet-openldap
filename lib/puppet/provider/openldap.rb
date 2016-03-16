@@ -10,28 +10,21 @@ class Puppet::Provider::Openldap < Puppet::Provider
   commands :original_slapcat    => 'slapcat',
            :original_ldapmodify => 'ldapmodify'
 
-  def self.slapcat(filter)
+  def self.slapcat(filter, dn = '')
     original_slapcat(
       '-b',
       'cn=config',
       '-o',
       'ldif-wrap=no',
       '-H',
-      "ldap:///???#{filter}"
+      "ldap:///#{dn}???#{filter}"
     )
   end
 
-  def delimit
-    "-\n"
-  end
-
-  def cn_config()
-    dn('cn=config')
-  end
-
-  def ldapmodify(path)
-    original_ldapmodify('-Y', 'EXTERNAL', '-H', 'ldapi:///', '-f', path)
-  end
+  # TODO: Rename:
+  #        - get_entries to get_lines
+  #        - get_paragraphs to get_entries
+  #       LDAP uses "entries" as name for database records.
 
   def self.get_entries(items)
     items.strip.
@@ -41,9 +34,30 @@ class Puppet::Provider::Openldap < Puppet::Provider
       collect { |entry| entry.gsub(/^olc/, '') }
   end
 
+  def self.get_paragraphs(items)
+    items.strip.
+      split("\n\n").
+      collect { |paragraph|
+        paragraph.
+          gsub("\n ", '').
+          split("\n")
+      }
+  end
 
-  def temp_ldif()
-    Tempfile.new('openldap_global_conf')
+  def ldapmodify(path)
+    original_ldapmodify('-Y', 'EXTERNAL', '-H', 'ldapi:///', '-f', path)
+  end
+
+  def temp_ldif(name = 'openldap_ldif')
+    Tempfile.new(name)
+  end
+
+  def cn_config()
+    dn('cn=config')
+  end
+
+  def delimit
+    "-\n"
   end
 
   def dn(dn)
@@ -52,10 +66,6 @@ class Puppet::Provider::Openldap < Puppet::Provider
 
   def changetype(t)
     "changetype: #{t}\n"
-  end
-
-  def delimit
-    "-\n"
   end
 
   def add(key)
