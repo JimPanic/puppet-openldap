@@ -35,7 +35,7 @@ Puppet::Type.newtype(:openldap_database) do
           'hdb'
         end
       when 'RedHat'
-        if Facter.value(:operatingsystemmajrelease).to_i <= 7
+        if Facter.value(:operatingsystemmajrelease).to_i < 7
           'bdb'
         else
           'hdb'
