@@ -65,7 +65,7 @@ Puppet::Type.
     resources.keys.each do |name|
       provider = instances().find do |instance|
         access_instance = normalize_access(instance.access)
-        access_resource = normalize_access(resource[name][:access])
+        access_resource = normalize_access(resources[name][:access])
 
         Puppet.debug(">>> PREFETCH what #{instance.what} #{resources[name][:what]}")
         Puppet.debug(">>> PREFETCH access #{access_instance} #{access_resource}")
