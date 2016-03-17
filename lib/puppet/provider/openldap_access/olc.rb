@@ -57,16 +57,23 @@ Puppet::Type.
     _instances
   end
 
+  def self.normalize_access(access)
+    [access].flatten.compact.reject { |s| s.empty? }.collect(&:strip)
+  end
+
   def self.prefetch(resources)
     resources.keys.each do |name|
       provider = instances().find do |instance|
-        Puppet.debug(">>> PREFETCH #{instance.what} #{resources[name][:what]}")
-        Puppet.debug(">>> PREFETCH #{instance.access} #{resources[name][:access]}")
-        Puppet.debug(">>> PREFETCH #{instance.suffix} #{resources[name][:suffix]}")
+        access_instance = normalize_access(instance.access)
+        access_resource = normalize_access(resource[name][:access])
 
-        instance.what             == resources[name][:what] &&
-        instance.access.join(' ') == resources[name][:access].join(' ') &&
-        instance.suffix           == resources[name][:suffix]
+        Puppet.debug(">>> PREFETCH what #{instance.what} #{resources[name][:what]}")
+        Puppet.debug(">>> PREFETCH access #{access_instance} #{access_resource}")
+        Puppet.debug(">>> PREFETCH suffix #{instance.suffix} #{resources[name][:suffix]}")
+
+        instance.what   == resources[name][:what] &&
+        access_instace  == access_resource &&
+        instance.suffix == resources[name][:suffix]
       end
 
       resources[name].provider = provider if provider
