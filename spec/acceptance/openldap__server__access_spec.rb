@@ -27,8 +27,15 @@ describe 'openldap::server::access' do
   context 'with defaults' do
     it 'should idempotently run' do
       pp = <<-EOS
-        class { 'openldap::server': }
-        openldap::server::database { 'dc=example,dc=com' : }
+        class { '::openldap::server': }
+
+        # This may be needed for the access rule below to work
+        ::openldap::server::schema { ['cosine', 'inetorgperson', 'nis']:
+          ensure => present,
+        }
+
+        ::openldap::server::database { 'dc=example,dc=com' : }
+
         ::openldap::server::access { 'admin':
           what     => 'attrs=userPassword,shadowLastChange',
           access   => ['by dn="cn=admin,dc=example,dc=com" write'],
