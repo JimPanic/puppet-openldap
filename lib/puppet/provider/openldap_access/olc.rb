@@ -98,7 +98,7 @@ Puppet::Type.
     ldif = temp_ldif('openldap_access')
 
     ldif << dn(self.class.getDn(resource[:suffix]))
-    ldif << changetype(:add)
+    ldif << changetype(:modify)
     ldif << add(:Access)
     ldif << "olcAccess: #{position}to #{resource[:what]} \n"
 
