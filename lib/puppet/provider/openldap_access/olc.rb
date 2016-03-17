@@ -9,9 +9,6 @@ Puppet::Type.
   mk_resource_methods
 
   def self.instances
-
-    acl_entries = []
-
     # Not sure this is needed. But we will restrict to mdb, hdb, bdb, frontend
     # and config for now.
     entries = get_paragraphs(slapcat('(olcAccess=*)')).select do |entry|
@@ -19,55 +16,57 @@ Puppet::Type.
         /^dn: olcDatabase.*(mdb|hdb|bdb|frontend|config),cn=config$/
     end
 
-
-    entries.each do |entry|
+    _instances = entries.collect do |entry|
       access = nil
       suffix = nil
       position = nil
 
-      entry.collect do |line|
-        case line
-        when /^olcDatabase: /
-          suffix = "cn=#{line.split(' ')[1].gsub(/\{-?\d+\}/, '')}"
+      access_lines  = entry.select { |line| line =~ /^olcAccess: / }
+      database_line = entry.detect { |line| line =~ /^olcDatabase: / }
+      suffix_line ||= entry.detect { |line| line =~ /^olcSuffix: / }
 
-        when /^olcSuffix: /
-          suffix = line.split(' ')[1]
+      suffix = "cn=#{database_line.split(' ')[1].gsub(/\{-?\d+\}/, '')}" unless database_line.nil?
+      suffix = suffix_line.split(' ')[1]                                 unless suffix_line.nil?
 
-        when /^olcAccess: /
-          access = []
-          position, what, bys = line.
-            match(/^olcAccess:\s+\{(\d+)\}to\s+(\S+)(\s+by\s+.*)+$/).
-            captures
+      access_lines.collect do |line|
+        access = []
+        position, what, bys = 
+          line.
+          match(/^olcAccess:\s+\{(\d+)\}to\s+(\S+)(\s+by\s+.*)+$/).
+          captures
 
-          bys.split(/(?= by .+)/).each { |b| access << b.lstrip }
+        access = bys.split(/(?= by .+)/).collect(&:lstrip)
+        islast = (position.to_i + 1) == get_count_for_entry(entry)
 
-          islast = (position.to_i + 1) == get_count_for_entry(entry)
+        params = {
+          :name     => "#{position} to #{what} on #{suffix}",
+          :ensure   => :present,
+          :position => position,
+          :what     => what,
+          :access   => access,
+          :suffix   => suffix,
+          :islast   => islast
+	}
 
-          params = {
-            :name     => "#{position} to #{what} on #{suffix}",
-            :ensure   => :present,
-            :position => position,
-            :what     => what,
-            :access   => access,
-            :suffix   => suffix,
-            :islast   => islast
-	  }
+        new(params)
+      end.flatten.compact
+    end.flatten.compact
 
-          acl_entries << new(params)
-        end
-      end
-    end
+    Puppet.debug(">>> [INSTANCES olcAccess] #{_instances.inspect}")
 
-    acl_entries
+    _instances
   end
 
   def self.prefetch(resources)
-    accesses = instances
     resources.keys.each do |name|
-      provider = accesses.find do |access|
-        access.what   == resources[name][:what] &&
-        access.access == resources[name][:access] &&
-        access.suffix == resources[name][:suffix]
+      provider = instances().find do |instance|
+        Puppet.debug(">>> PREFETCH #{instance.what} #{resources[name][:what]}")
+        Puppet.debug(">>> PREFETCH #{instance.access} #{resources[name][:access]}")
+        Puppet.debug(">>> PREFETCH #{instance.suffix} #{resources[name][:suffix]}")
+
+        instance.what             == resources[name][:what] &&
+        instance.access.join(' ') == resources[name][:access].join(' ') &&
+        instance.suffix           == resources[name][:suffix]
       end
 
       resources[name].provider = provider if provider
@@ -100,9 +99,9 @@ Puppet::Type.
     ldif << dn(self.class.getDn(resource[:suffix]))
     ldif << changetype(:modify)
     ldif << add(:Access)
-    ldif << "olcAccess: #{position}to #{resource[:what]} \n"
+    ldif << "olcAccess: #{position}to #{resource[:what]}\n"
 
-    resource[:access].each { |a| ldif << "  #{a} \n" }
+    resource[:access].each { |a| ldif << "  #{a}\n" }
 
     ldif.close
 
