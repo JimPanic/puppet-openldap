@@ -27,6 +27,22 @@ olcTLSCertificateKeyFile: /etc/ssl/private/key.pam
 LDIF
   end
 
+  let(:create_ldif_ruby_1_8_7) do
+    <<-LDIF
+dn: cn=config
+changetype: modify
+replace: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /etc/ssl/private/key.pem
+-
+add: olcLogLevel
+olcLogLevel: stats
+-
+replace: olcTLSCertificateFile
+olcTLSCertificateFile: /etc/ssl/certs/cert.pem
+-
+LDIF
+  end
+
   let(:create_ldif) do
     <<-LDIF
 dn: cn=config
@@ -72,7 +88,12 @@ LDIF
   describe 'when creating' do
     it 'should create an entry in cn=config' do
       provider.stubs(:ldapmodify).returns(0)
-      expect(provider.create).to eq(create_ldif)
+
+      if RUBY_VERSION =~ /^1\.8/
+        expect(provider.create).to eq(create_ldif_ruby_1_8_7)
+      else
+        expect(provider.create).to eq(create_ldif)
+      end
     end
   end
 
