@@ -72,7 +72,7 @@ Puppet::Type.
         Puppet.debug(">>> PREFETCH suffix #{instance.suffix} #{resources[name][:suffix]}")
 
         instance.what   == resources[name][:what] &&
-        access_instace  == access_resource &&
+        access_instance  == access_resource &&
         instance.suffix == resources[name][:suffix]
       end
 
