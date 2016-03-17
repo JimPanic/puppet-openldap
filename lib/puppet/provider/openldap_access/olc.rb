@@ -185,7 +185,7 @@ Puppet::Type.
   end
 
   def get_current(suffix)
-    paragraphs = get_paragraphs(slapcat('(olcAccess=*)', self.class.getDn(suffix)))
+    paragraphs = get_paragraphs(self.class.slapcat('(olcAccess=*)', self.class.getDn(suffix)))
 
     paragraphs.collect do |paragraph|
       paragraph.
