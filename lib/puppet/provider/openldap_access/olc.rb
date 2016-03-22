@@ -219,12 +219,14 @@ Puppet::Type.
     ldif << replace_value(:Access)
 
     Puppet.debug(current_olcAccess.inspect)
+
     current_olcAccess.each do |current|
       Puppet.debug(current.inspect)
+
       if current[:position].to_i == position.to_i
         ldif << "olcAccess: {#{position}}to #{resource[:what]}\n"
 
-        resource[:access].each { |a| ldif << "  #{a}\n" }
+        resource[:access].flatten.compact.each { |a| ldif << "  #{a}\n" }
       else
         ldif << "olcAccess: {#{current[:position]}}#{current[:content]}\n"
       end
