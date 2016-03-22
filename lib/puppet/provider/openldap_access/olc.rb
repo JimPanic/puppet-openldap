@@ -35,7 +35,7 @@ Puppet::Type.
           match(/^olcAccess:\s+\{(\d+)\}to\s+(\S+)(\s+by\s+.*)+$/).
           captures
 
-        access = bys.split(/(?= by .+)/).collect(&:lstrip)
+        access = bys.strip.split(/(?= by .+)/).collect(&:lstrip).reject { |by| by.empty? }.flatten.compact
         islast = (position.to_i + 1) == get_count_for_entry(entry)
 
         Puppet.debug(">>> INSTANCES access #{access.inspect}")
