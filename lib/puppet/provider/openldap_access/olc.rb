@@ -219,6 +219,7 @@ Puppet::Type.
     ldif << replace_value(:Access)
 
     current_olcAccess.each do |current|
+      Puppet.debug(current.inspect)
       if current[:position].to_i == position.to_i
         ldif << "olcAccess: {#{position}}to #{resource[:what]}\n"
 
