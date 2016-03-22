@@ -203,7 +203,7 @@ Puppet::Type.
           { :position => position,
             :content  => content }
         end
-    end
+    end.flatten.compact
   end
 
   def flush
