@@ -171,6 +171,7 @@ Puppet::Type.
   end
 
   def access=(value)
+    Puppet.debug("access= #{value.inspect}")
     @property_flush[:access] = value
   end
 
