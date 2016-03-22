@@ -50,7 +50,7 @@ Puppet::Type.newtype(:openldap_access) do
     desc "Access rule."
 
     munge do |rules|
-      [rules].flatten.compact
+      [rules].flatten.compact.reject { |rule| rule.empty? }
     end
   end
 
