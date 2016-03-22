@@ -9,7 +9,7 @@ Puppet::Type.
   mk_resource_methods
 
   def self.instances
-    # Not sure this is needed. But we will restrict to mdb, hdb, bdb, frontend
+    # Not sure this is needed. But will restrict to mdb, hdb, bdb, frontend
     # and config for now.
     entries = get_paragraphs(slapcat('(olcAccess=*)')).select do |entry|
       entry.first.strip =~
@@ -37,6 +37,8 @@ Puppet::Type.
 
         access = bys.split(/(?= by .+)/).collect(&:lstrip)
         islast = (position.to_i + 1) == get_count_for_entry(entry)
+
+        Puppet.debug(">>> INSTANCES access #{access.inspect}")
 
         params = {
           :name     => "#{position} to #{what} on #{suffix}",
@@ -221,8 +223,6 @@ Puppet::Type.
     Puppet.debug(current_olcAccess.inspect)
 
     current_olcAccess.each do |current|
-      Puppet.debug(current.inspect)
-
       if current[:position].to_i == position.to_i
         ldif << "olcAccess: {#{position}}to #{resource[:what]}\n"
 
