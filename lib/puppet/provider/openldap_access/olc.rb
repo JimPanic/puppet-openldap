@@ -172,7 +172,7 @@ Puppet::Type.
 
   def access=(value)
     Puppet.debug("access= #{value.inspect}")
-    @property_flush[:access] = value
+    @property_flush[:access] = value.flatten.compact
   end
 
   def islast=(value)
