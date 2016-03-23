@@ -110,7 +110,7 @@ Puppet::Type.
     ldif << add(:Access)
     ldif << "olcAccess: #{position}to #{resource[:what]}\n"
 
-    resource[:access].each { |a| ldif << "  #{a}\n" }
+    resource[:access].flatten.compact.each { |a| ldif << "  #{a}\n" }
 
     ldif.close
 

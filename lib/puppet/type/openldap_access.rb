@@ -46,7 +46,7 @@ Puppet::Type.newtype(:openldap_access) do
     desc "Where to place the new entry"
   end
 
-  newproperty(:access, :array_matching => :all) do
+  newproperty(:access, :array_matching => :first) do
     desc "Access rule."
 
     munge do |rules|
