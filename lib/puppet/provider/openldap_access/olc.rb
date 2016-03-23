@@ -16,7 +16,7 @@ Puppet::Type.
         /^dn: olcDatabase.*(mdb|hdb|bdb|frontend|config),cn=config$/
     end
 
-    _instances = entries.collect do |entry|
+    rules = entries.collect do |entry|
       access = nil
       suffix = nil
       position = nil
@@ -26,11 +26,11 @@ Puppet::Type.
       suffix_line ||= entry.detect { |line| line =~ /^olcSuffix: / }
 
       unless database_line.nil?
-        suffix = "cn=#{database_line.split(' ').first.gsub(/\{-?\d+\}/, '')}"
+        suffix = "cn=#{last_of_split(database_line).gsub(/\{-?\d+\}/, '')}"
       end
 
       unless suffix_line.nil?
-        suffix = suffix_line.split(' ').first
+        suffix = last_of_split(suffix_line)
       end
 
       access_lines.collect do |line|
@@ -40,7 +40,7 @@ Puppet::Type.
           match(/^olcAccess:\s+\{(\d+)\}to\s+(\S+)(\s+by\s+.*)+$/).
           captures
 
-        access = bys.strip.split(/(?= by .+)/).collect(&:lstrip).reject { |by| by.empty? }.flatten.compact
+        access = bys.strip.split(/(?= by .+)/).collect(&:lstrip).reject { |by| by.empty? }
         islast = (position.to_i + 1) == get_count_for_entry(entry)
 
         Puppet.debug(">>> INSTANCES access #{access.inspect}")
@@ -50,7 +50,7 @@ Puppet::Type.
           :ensure   => :present,
           :position => position,
           :what     => what,
-          :access   => access,
+          :access   => [access].flatten.compact,
           :suffix   => suffix,
           :islast   => islast
 	}
@@ -59,9 +59,9 @@ Puppet::Type.
       end.flatten.compact
     end.flatten.compact
 
-    Puppet.debug(">>> [INSTANCES olcAccess] #{_instances.inspect}")
+    Puppet.debug(">>> [INSTANCES olcAccess] #{rules.inspect}")
 
-    _instances
+    rules
   end
 
   def self.normalize_access(access)
@@ -74,9 +74,9 @@ Puppet::Type.
         access_instance = normalize_access(instance.access)
         access_resource = normalize_access(resources[name][:access])
 
-        Puppet.debug(">>> PREFETCH what #{instance.what} #{resources[name][:what]}")
-        Puppet.debug(">>> PREFETCH access #{access_instance} #{access_resource}")
-        Puppet.debug(">>> PREFETCH suffix #{instance.suffix} #{resources[name][:suffix]}")
+        Puppet.debug(">>> PREFETCH what #{instance.what} | #{resources[name][:what]}")
+        Puppet.debug(">>> PREFETCH access #{access_instance} | #{access_resource}")
+        Puppet.debug(">>> PREFETCH suffix #{instance.suffix} | #{resources[name][:suffix]}")
 
         instance.what   == resources[name][:what] &&
         access_instance  == access_resource &&
@@ -127,7 +127,7 @@ Puppet::Type.
       ldapmodify(ldif.path)
 
     rescue Exception => e
-      cnconfig = self.class.slapcat('(olcAccess=*)')
+      cnconfig = slapcat('(olcAccess=*)')
       raise Puppet::Error, "LDIF content:\n#{ldif_content}\nError message: #{e.message}\n\n\n#{cnconfig}"
     end
   end

@@ -20,7 +20,10 @@ class Puppet::Provider::Openldap < Puppet::Provider
       "ldap:///#{dn}???#{filter}"
     )
   end
+  def slapcat(*args); self.class.slapcat(*args); end
 
+  # Unwrap LDIF and return each attribute beginning with "olc" also removing
+  # that occurance of "olc" at the beginning.
   def self.get_lines(items)
     items.strip.
       gsub("\n ", "").
@@ -28,6 +31,7 @@ class Puppet::Provider::Openldap < Puppet::Provider
       select  { |entry| entry =~ /^olc/ }.
       collect { |entry| entry.gsub(/^olc/, '') }
   end
+  def get_lines(*args); self.class.get_lines(*args); end
 
   def self.get_entries(items)
     items.strip.
@@ -38,6 +42,12 @@ class Puppet::Provider::Openldap < Puppet::Provider
           split("\n")
       }
   end
+  def get_entries(*args); self.class.get_entries(*args); end
+
+  def self.last_of_split(line, by = ' ')
+    line.split(by, 2).last
+  end
+  def last_of_split(*args); self.class.last_of_split(*args); end
 
   def ldapmodify(path)
     original_ldapmodify('-Y', 'EXTERNAL', '-H', 'ldapi:///', '-f', path)

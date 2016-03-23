@@ -46,6 +46,9 @@ describe 'openldap::server::access' do
 
       apply_manifest(pp, :catch_failures => true)
       apply_manifest(pp, :catch_changes => true)
+
+      #apply_manifest(pp, :catch_failures => true, :trace => true, :debug => true)
+      #apply_manifest(pp, :catch_changes => true, :trace => true, :debug => true)
     end
   end
 
