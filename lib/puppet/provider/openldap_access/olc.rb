@@ -11,7 +11,7 @@ Puppet::Type.
   def self.instances
     # Not sure this is needed. But will restrict to mdb, hdb, bdb, frontend
     # and config for now.
-    entries = get_paragraphs(slapcat('(olcAccess=*)')).select do |entry|
+    entries = get_entries(slapcat('(olcAccess=*)')).select do |entry|
       entry.first.strip =~
         /^dn: olcDatabase.*(mdb|hdb|bdb|frontend|config),cn=config$/
     end
@@ -25,12 +25,17 @@ Puppet::Type.
       database_line = entry.detect { |line| line =~ /^olcDatabase: / }
       suffix_line ||= entry.detect { |line| line =~ /^olcSuffix: / }
 
-      suffix = "cn=#{database_line.split(' ')[1].gsub(/\{-?\d+\}/, '')}" unless database_line.nil?
-      suffix = suffix_line.split(' ')[1]                                 unless suffix_line.nil?
+      unless database_line.nil?
+        suffix = "cn=#{database_line.split(' ').first.gsub(/\{-?\d+\}/, '')}"
+      end
+
+      unless suffix_line.nil?
+        suffix = suffix_line.split(' ').first
+      end
 
       access_lines.collect do |line|
         access = []
-        position, what, bys = 
+        position, what, bys =
           line.
           match(/^olcAccess:\s+\{(\d+)\}to\s+(\S+)(\s+by\s+.*)+$/).
           captures
@@ -88,7 +93,7 @@ Puppet::Type.
 
     suffix = 'monitor' if suffix == 'cn=monitor'
 
-    dn_line = get_paragraphs(slapcat("(olcSuffix=#{suffix})")).
+    dn_line = get_entries(slapcat("(olcSuffix=#{suffix})")).
       first.
       detect { |line| line =~ /^dn: / }
 
@@ -188,17 +193,17 @@ Puppet::Type.
 
   def self.get_count_for_suffix(suffix)
     get_count_for_entry(
-      get_paragraphs(
+      get_entries(
         slapcat('(olcAccess=*)', getDn(suffix))
       ).first
     )
   end
 
   def get_current(suffix)
-    paragraphs = self.class.get_paragraphs(self.class.slapcat('(olcAccess=*)', self.class.getDn(suffix)))
+    entries = self.class.get_entries(self.class.slapcat('(olcAccess=*)', self.class.getDn(suffix)))
 
-    paragraphs.collect do |paragraph|
-      paragraph.
+    entries.collect do |entry|
+      entry.
         select { |line| line =~ /^olcAccess: / }.
         collect do |line|
           position, content = line.match(/^olcAccess:\s+\{(\d+)\}(.*)$/).captures

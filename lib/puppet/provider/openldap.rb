@@ -21,12 +21,7 @@ class Puppet::Provider::Openldap < Puppet::Provider
     )
   end
 
-  # TODO: Rename:
-  #        - get_entries to get_lines
-  #        - get_paragraphs to get_entries
-  #       LDAP uses "entries" as name for database records.
-
-  def self.get_entries(items)
+  def self.get_lines(items)
     items.strip.
       gsub("\n ", "").
       split("\n").
@@ -34,7 +29,7 @@ class Puppet::Provider::Openldap < Puppet::Provider
       collect { |entry| entry.gsub(/^olc/, '') }
   end
 
-  def self.get_paragraphs(items)
+  def self.get_entries(items)
     items.strip.
       split("\n\n").
       collect { |paragraph|

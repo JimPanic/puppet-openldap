@@ -12,7 +12,7 @@ Puppet::Type.
   def self.instances
     ldif = slapcat('(objectClass=olcGlobal)')
 
-    entries = get_entries(ldif)
+    entries = get_lines(ldif)
 
     resources = entries.reduce([]) do |tuples, entry|
       # Return at most two items from split, otherwise value might end up being
