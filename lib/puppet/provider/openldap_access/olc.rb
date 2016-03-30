@@ -224,7 +224,7 @@ Puppet::Type.
 
     ldif << dn(self.class.getDn(resource[:suffix]))
     ldif << changetype(:modify)
-    ldif << replace_value(:Access)
+    ldif << replace_key(:Access)
 
     Puppet.debug(current_olcAccess.inspect)
 

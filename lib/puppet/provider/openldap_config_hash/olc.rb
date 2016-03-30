@@ -129,12 +129,12 @@ Puppet::Type.
 
     if resource[:value].is_a? Hash
       resource[:value].each do |k, v|
-        ldif << replace_value(k)
+        ldif << replace_key(k)
         ldif << key_value(k, v)
         ldif << delimit()
       end
     else
-        ldif << replace_value(name)
+        ldif << replace_key(name)
         ldif << key_value(name, value)
     end
 

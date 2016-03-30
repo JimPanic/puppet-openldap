@@ -33,6 +33,20 @@ class Puppet::Provider::Openldap < Puppet::Provider
   end
   def get_lines(*args); self.class.get_lines(*args); end
 
+  # Unwrap LDIF and return each entry as array of lines.
+  #
+  # Example LDIF:
+  #   dn: cn=config
+  #   ...
+  #
+  #   dn: cn=schema,cn=config
+  #   ...
+  #
+  # Results in:
+  #
+  #   [['dn: cn=config', '...'],
+  #    ['dn: cn=schema,cn=config', '...']]
+  #
   def self.get_entries(items)
     items.strip.
       split("\n\n").
@@ -57,31 +71,14 @@ class Puppet::Provider::Openldap < Puppet::Provider
     Tempfile.new(name)
   end
 
-  def cn_config()
-    dn('cn=config')
-  end
+  def delimit       ; "-\n"                 ; end
+  def cn_config     ; dn('cn=config')       ; end
+  def dn(dn)        ; "dn: #{dn}\n"         ; end
+  def changetype(t) ; "changetype: #{t}\n"  ; end
+  def add(key)      ; "add: olc#{key}\n"    ; end
+  def del(key)      ; "delete: olc#{key}\n" ; end
 
-  def delimit
-    "-\n"
-  end
-
-  def dn(dn)
-    "dn: #{dn}\n"
-  end
-
-  def changetype(t)
-    "changetype: #{t}\n"
-  end
-
-  def add(key)
-    "add: olc#{key}\n"
-  end
-
-  def del(key)
-    "delete: olc#{key}\n"
-  end
-
-  def replace_value(key)
+  def replace_key(key)
     "replace: olc#{key}\n"
   end
 
@@ -120,7 +117,7 @@ class Puppet::Provider::Openldap < Puppet::Provider
     use_replace = single_value_attributes.include?(key.to_s) || force_replace == :true
 
     return use_replace ?
-      replace_value(key) :
+      replace_key(key) :
       add(key)
   end
 end

@@ -81,7 +81,7 @@ Puppet::Type.
   end
 
   def add_or_replace_manual
-    return replace_value(resource[:key]) if resource[:replace] == :true
+    return replace_key(resource[:key]) if resource[:replace] == :true
     return add(resource[:key])
   end
 
