@@ -102,7 +102,7 @@ Puppet::Type.
           syncrepl.push(value.match(/^(\{\d+\})?(.+)$/).captures.last)
 
         when /^olcLimits: /
-          limit = line.match(/^olcLimits:\s+(\{\d+\})?(.+)$/).captures.first
+          limit = line.match(/^olcLimits:\s+(\{\d+\})?(.+)$/).captures.last
           limits << limit
         end
       end
